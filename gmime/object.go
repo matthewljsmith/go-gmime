@@ -22,6 +22,9 @@ static gboolean object_is_partial(GTypeInstance *obj) {
 static GMimePart * gmime_part(GMimeObject *obj) {
 	return GMIME_PART(obj);
 }
+static gboolean header_list_remove (GMimeHeaderList *headers, const char *name){
+	return TRUE;
+}
 */
 import "C"
 import (
@@ -33,6 +36,7 @@ type Object interface {
 	SetContentType(ContentType)
 	ContentType() ContentType
 	SetHeader(string, string)
+	DelHeader(string) bool
 	Header(string) (string, bool)
 	ToString() string
 	ContentDisposition() ContentDisposition
@@ -95,6 +99,14 @@ func (o *anObject) SetHeader(name, value string) {
 	defer C.free(unsafe.Pointer(_value))
 
 	C.g_mime_object_set_header(o.rawObject(), _name, _value)
+}
+
+func (o *anObject) DelHeader(name string) bool {
+	var _name *C.char = C.CString(name)
+	defer C.free(unsafe.Pointer(_name))
+
+	hlist := C.g_mime_object_get_header_list(o.rawObject())
+	return gobool(C.g_mime_header_list_remove(hlist, _name))
 }
 
 func (o *anObject) Header(name string) (string, bool) {
